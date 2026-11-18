@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="hu" data-th="sun">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fffaf0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Asszisztens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400..700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#060a1f;--ink:#eaf4ff;--dim:#97a9c9;--ember:#3b82f6;--flame:#d946ef;--amber:#5ee4ff;--rose:#a78bfa;--edge:rgba(190,220,255,.18);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:400 16px/1.5 'Hanken Grotesk',system-ui,sans-serif;overflow-x:hidden}
+button,input{font:inherit;color:inherit}
+button{border:0;background:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.aurora{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.aurora i{position:absolute;width:95vmax;height:95vmax;border-radius:50%;opacity:.5;transition:opacity 1.2s;will-change:transform;animation:drift 28s ease-in-out infinite alternate}
+.aurora i:nth-child(1){left:-40vmax;top:-45vmax;background:radial-gradient(circle,var(--a1),transparent 62%)}
+.aurora i:nth-child(2){right:-55vmax;top:5vh;background:radial-gradient(circle,var(--a2),transparent 62%);animation-duration:34s;animation-delay:-9s}
+.aurora i:nth-child(3){left:-20vmax;bottom:-60vmax;background:radial-gradient(circle,var(--a3),transparent 62%);opacity:.36;animation-duration:40s;animation-delay:-17s}
+.aurora i:nth-child(4){right:-30vmax;bottom:-50vmax;background:radial-gradient(circle,var(--a4),transparent 62%);animation-duration:31s;animation-delay:-4s}
+body.air .aurora i{opacity:.8}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(9vmax,6vmax,0) scale(1.12) rotate(20deg)}to{transform:translate3d(-6vmax,12vmax,0) scale(.95) rotate(-12deg)}}
+.glass{position:relative;overflow:hidden;background:linear-gradient(160deg,var(--g1),var(--g2));border:1px solid var(--edge);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 18px 40px -20px var(--sh)}
+.glass::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(200px circle at var(--mx,50%) var(--my,0),color-mix(in srgb,var(--amber) 35%,transparent),transparent 70%)}
+.glass.lit::after{opacity:1}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:24px 18px 140px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{margin:0;font:700 clamp(36px,10vw,50px)/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.035em}
+.date{margin:.6rem 0 0;color:var(--dim);text-transform:capitalize}
+.save{padding:8px 14px;border-radius:999px;font-size:14px;color:var(--dim);white-space:nowrap}
+.save[aria-pressed=true]{color:var(--ink);border-color:var(--amber)}
+.note{margin:.9rem 0 0;font-size:14px;color:var(--dim)}
+.view{display:none}
+.view.on{display:block;animation:in .55s cubic-bezier(.2,.8,.2,1)}
+@keyframes in{from{opacity:0;transform:translateY(16px);filter:blur(8px)}}
+h2{margin:0 0 8px;font:600 18px/1.2 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:-.01em}
+.rec{position:relative;width:150px;height:150px;margin:30px auto 6px;display:grid;place-items:center}
+.rec .ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--amber) 55%,transparent);opacity:0}
+.air .rec .ring{animation:ring 2s ease-out infinite}
+.air .rec .ring:nth-child(2){animation-delay:1s}
+@keyframes ring{from{transform:scale(.72);opacity:.9}to{transform:scale(1.4);opacity:0}}
+#mic{position:relative;width:112px;height:112px;border-radius:50%;color:#fff;background:radial-gradient(circle at 30% 22%,var(--amber),var(--ember) 46%,var(--flame));box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 22px 54px -10px color-mix(in srgb,var(--ember) 75%,transparent);transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+#mic:active{transform:scale(.92)}
+#mic svg{width:42px;height:42px;margin:auto;display:block}
+#mic .stop{display:none}
+.air #mic .stop{display:block}
+.air #mic .mc{display:none}
+.time{text-align:center;font:600 30px 'Bricolage Grotesque',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.hint{text-align:center;color:var(--dim);margin:2px 0 14px}
+#wave{display:flex;align-items:center;justify-content:center;gap:4px;height:60px}
+.bar{width:4px;height:58px;border-radius:4px;background:linear-gradient(var(--amber),var(--flame));transform:scaleY(.06);transition:transform .14s}
+.card{padding:18px 20px;border-radius:26px;margin-top:14px}
+.card.sm{border-radius:18px;padding:13px 16px}
+.reveal{opacity:0;transform:translateY(18px) scale(.98);filter:blur(6px)}
+.reveal.show{opacity:1;transform:none;filter:none;transition:all .65s cubic-bezier(.2,.8,.2,1) var(--d,0s)}
+.typing::after{content:"";display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-3px;background:var(--ember);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.x{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--edge)}
+.chip{padding:3px 12px;border-radius:999px;background:color-mix(in srgb,var(--ember) 28%,transparent);color:var(--ink);font-size:13px;white-space:nowrap}
+.btn{width:100%;margin-top:14px;padding:14px 18px;border-radius:16px;font-weight:700;color:#04112a;background:linear-gradient(120deg,var(--amber),var(--ember) 55%,var(--rose));box-shadow:0 14px 30px -12px color-mix(in srgb,var(--ember) 80%,transparent);transition:transform .2s}
+.btn:active{transform:scale(.97)}
+.prog{height:6px;border-radius:6px;background:color-mix(in srgb,var(--ink) 10%,transparent);margin:10px 0 4px;overflow:hidden}
+.prog b{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--amber),var(--flame));transition:width .6s cubic-bezier(.3,1.2,.4,1)}
+.row{display:flex;align-items:center;gap:14px;border-radius:20px;padding:14px 16px;margin-top:10px}
+.row span.t{flex:1;transition:opacity .4s,color .4s}
+.row.done span.t{opacity:.45;text-decoration:line-through}
+.ck{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid color-mix(in srgb,var(--ink) 35%,transparent);position:relative;transition:all .3s cubic-bezier(.3,1.6,.5,1)}
+.done .ck{background:linear-gradient(135deg,var(--amber),var(--flame));border-color:transparent;transform:scale(1.1)}
+.done .ck::after{content:"";position:absolute;left:9px;top:4px;width:7px;height:13px;border:solid #04112a;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.sp{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:9;animation:sp .75s ease-out forwards}
+@keyframes sp{to{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}}
+.add{display:flex;gap:8px;margin-top:14px}
+.in{flex:1;min-width:0;padding:13px 16px;border-radius:16px;border:1px solid var(--edge);background:var(--g2);outline-offset:2px}
+.in::placeholder{color:var(--dim)}
+.add .btn{width:auto;margin:0;padding:0 18px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+.d{padding:10px 0 9px;border-radius:16px;text-align:center;color:var(--dim);transition:all .3s}
+.d b{display:block;font:700 19px 'Bricolage Grotesque',sans-serif;color:var(--ink)}
+.d small{font-size:12px}
+.d.today{box-shadow:0 0 0 1.5px var(--ember),0 0 24px -2px color-mix(in srgb,var(--ember) 55%,transparent)}
+.d.sel{background:linear-gradient(160deg,color-mix(in srgb,var(--ember) 55%,transparent),color-mix(in srgb,var(--flame) 40%,transparent))}
+.ev{display:flex;gap:14px;border-radius:20px;padding:14px 16px;margin-top:10px;animation:in .5s cubic-bezier(.2,.8,.2,1) both}
+.ev i{width:4px;border-radius:4px;background:var(--c)}
+.ev b{display:block;font:600 17px 'Bricolage Grotesque',sans-serif}
+.empty{margin-top:14px;color:var(--dim);text-align:center;padding:26px 10px}
+.nt{padding:15px 18px;border-radius:22px;margin-top:10px}
+.nt p{margin:.2rem 0 0;color:var(--ink)}
+.ans{min-height:1.5em;margin-top:12px}
+.dock{position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100% - 28px));display:grid;grid-template-columns:repeat(5,1fr);padding:6px;border-radius:32px}
+.pill{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/5);border-radius:25px;background:linear-gradient(135deg,color-mix(in srgb,var(--ember) 55%,transparent),color-mix(in srgb,var(--flame) 45%,transparent));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 24px -8px color-mix(in srgb,var(--ember) 90%,transparent);transition:transform .5s cubic-bezier(.3,1.35,.45,1)}
+.dock button{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;color:var(--dim);font-size:12px;font-weight:600;transition:color .3s}
+.dock button[aria-selected=true]{color:var(--ink)}
+.dock svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+:root{--a1:#2563eb;--a2:#d02be0;--a3:#06c4d8;--a4:#5b21d6;--g1:rgba(225,240,255,.12);--g2:rgba(225,240,255,.04);--sh:rgba(0,0,0,.7);--sv:rgba(12,20,50,.9)}
+:root[data-th=sun]{color-scheme:light;--bg:#fffaf0;--ink:#3b2a1e;--dim:#7a6250;--ember:#ffa573;--flame:#ff8f8f;--amber:#ffd54a;--rose:#ffc6a8;--a1:#ffd24d;--a2:#ffa07a;--a3:#ffe9a8;--a4:#ffb3a0;--edge:rgba(140,90,40,.16);--g1:rgba(255,255,255,.75);--g2:rgba(255,255,255,.4);--sh:rgba(170,110,50,.5);--sv:rgba(255,250,240,.95)}
+:root[data-th=sun] .aurora i,:root[data-th=sun] .aurora i:nth-child(3){opacity:.8}
+:root[data-th=sun] body.air .aurora i{opacity:1}
+:root[data-th=sun] #mic{color:#4a2c18}
+:root[data-th=smaragd]{--bg:#03130f;--ink:#ecfff8;--dim:#8fb5a8;--ember:#10b981;--flame:#eab308;--amber:#5eead4;--rose:#a7f3d0;--a1:#059669;--a2:#ca8a04;--a3:#0d9488;--a4:#065f46;--edge:rgba(190,255,230,.18)}
+:root[data-th=lila]{--bg:#0b061d;--ink:#f6efff;--dim:#b3a3d1;--ember:#8b5cf6;--flame:#ec4899;--amber:#c4b5fd;--rose:#f9a8d4;--a1:#7c3aed;--a2:#ec4899;--a3:#38bdf8;--a4:#4338ca;--edge:rgba(220,200,255,.18)}
+:root[data-th=jeg]{--bg:#041219;--ink:#effaff;--dim:#8fb2c2;--ember:#38bdf8;--flame:#a5f3fc;--amber:#bae6fd;--rose:#e0f2fe;--a1:#0ea5e9;--a2:#67e8f9;--a3:#e0f2fe;--a4:#0369a1;--edge:rgba(200,240,255,.2)}
+textarea{font:inherit;color:inherit}
+textarea.in{width:100%;min-height:140px;resize:none;margin-top:14px}
+.mode{display:none}.mode.on{display:block;animation:in .45s cubic-bezier(.2,.8,.2,1)}
+.seg{display:flex;gap:6px;align-items:center;margin-top:22px}
+.seg button{padding:9px 18px;border-radius:999px;border:1px solid var(--edge);color:var(--dim);font-weight:600}
+.seg button[aria-pressed=true]{color:var(--ink);background:linear-gradient(135deg,color-mix(in srgb,var(--ember) 55%,transparent),color-mix(in srgb,var(--flame) 45%,transparent))}
+.seg .close{margin-left:auto;border:0;padding:9px 4px}
+.pv{position:relative;border-radius:22px;overflow:hidden;margin-top:14px}.pv img{display:block;width:100%;max-height:300px;object-fit:cover}
+.scan{position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--amber),transparent);box-shadow:0 0 22px var(--amber);animation:scan 1.5s ease-in-out infinite alternate}
+@keyframes scan{to{top:calc(100% - 3px)}}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.st{padding:10px 6px;border-radius:16px;background:var(--g2);text-align:center;font-size:13px;color:var(--dim)}
+.st b{display:block;font:700 28px 'Bricolage Grotesque',sans-serif;color:var(--ink)}
+p.dimp{color:var(--dim);margin:10px 0 0;font-size:14px}
+.wk{display:flex;align-items:flex-end;gap:8px;height:90px;margin-top:8px}
+.wk i{flex:1;border-radius:8px 8px 4px 4px;background:linear-gradient(var(--amber),var(--flame));height:var(--h);transform-origin:bottom;animation:grow .8s cubic-bezier(.3,1.3,.4,1) both;animation-delay:calc(var(--i)*60ms)}
+@keyframes grow{from{transform:scaleY(0)}}
+.wl{display:flex;gap:8px;margin-top:6px;color:var(--dim);font-size:12px}.wl span{flex:1;text-align:center}
+.fab{position:fixed;z-index:6;right:20px;bottom:calc(92px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:22px;font-size:36px;font-weight:300;line-height:1;color:#04112a;background:linear-gradient(135deg,var(--amber),var(--ember) 60%,var(--flame));box-shadow:0 18px 40px -10px color-mix(in srgb,var(--ember) 80%,transparent),inset 0 1px 0 rgba(255,255,255,.5);transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .3s}
+.fab:active{transform:scale(.9) rotate(90deg)}.fab.off{opacity:0;pointer-events:none;transform:scale(.6)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.tile{padding:16px;border-radius:22px;text-align:left;min-height:100px;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.tile b{font:600 18px 'Bricolage Grotesque',sans-serif}.tile small{color:var(--dim);font-size:13px;line-height:1.3}
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px}
+.themes button{padding:8px 4px;border-radius:16px;border:1px solid var(--edge);font-size:13px;color:var(--dim)}
+.themes i{display:block;height:34px;border-radius:12px;margin-bottom:6px}
+.themes button[aria-pressed=true]{border-color:var(--amber);color:var(--ink)}
+.mic-s{width:54px;padding:0!important;display:grid;place-items:center}.mic-s svg{width:22px;height:22px}
+.btn.ghost{background:none;border:1px solid var(--edge);color:var(--ink);box-shadow:none}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.tg{padding:6px 14px;border-radius:999px;border:1px solid var(--edge);font-size:14px;color:var(--dim)}
+.tg[aria-pressed=true]{color:var(--ink);background:color-mix(in srgb,var(--ember) 30%,transparent)}
+.star{float:right;margin:-4px -4px 0 8px;font-size:26px;line-height:1;color:var(--dim)}.star.on{color:var(--ember)}
+.srcs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ct{border-radius:22px;padding:14px 16px;margin-top:10px}
+.ct .hd{display:flex;gap:14px;align-items:center;cursor:pointer}.ct .hd>div{flex:1;min-width:0}
+.av{flex:none;width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font:700 17px 'Bricolage Grotesque',sans-serif;color:#4a2c18;background:linear-gradient(135deg,var(--amber),var(--ember))}
+.ct small{color:var(--dim)}.ct a{color:var(--ink)}
+.ct .bd{display:none;margin-top:12px;border-top:1px solid var(--edge);padding-top:10px}
+.ct.open .bd{display:block;animation:in .4s both}
+.ask{display:flex;gap:12px;align-items:center;padding:8px 0;transition:opacity .3s}
+.ask.done span{opacity:.45;text-decoration:line-through}
+.ask .ck{width:26px;height:26px}.ask.done .ck::after{left:7px;top:3px;width:6px;height:11px}
+.big{font:700 34px 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.stack{display:flex;height:12px;border-radius:12px;overflow:hidden;margin-top:12px;gap:2px}.stack i{display:block;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:13px;color:var(--dim)}
+.leg b{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.ex{display:flex;gap:12px;align-items:center;border-radius:18px;padding:12px 16px;margin-top:8px}
+.ex .t{flex:1}.ex .t small{display:block;color:var(--dim)}.ex .a{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+select{font:inherit;color:inherit}select.in{width:100%;margin-top:14px}
+.hh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dots{display:flex;gap:6px;margin-top:12px}.dw{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}.dw small{color:var(--dim);font-size:12px}
+.dot{width:100%;max-width:40px;aspect-ratio:1;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--ink) 25%,transparent);transition:all .3s cubic-bezier(.3,1.5,.5,1)}
+.dot.on{background:linear-gradient(135deg,var(--amber),var(--ember));border-color:transparent;transform:scale(1.05)}
+.dot.tod{box-shadow:0 0 0 2px color-mix(in srgb,var(--ember) 45%,transparent)}.dot:not(.tod){pointer-events:none}
+.fring{position:relative;width:min(70vw,260px);margin:24px auto}.fring svg{width:100%;display:block}
+.ftime{position:absolute;inset:0;display:grid;place-items:center;font:700 52px 'Bricolage Grotesque',sans-serif;font-variant-numeric:tabular-nums}
+#xo{min-height:230px;font-size:13px;margin-top:14px}
+.gate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}.gate[hidden]{display:none}.gate .card{width:min(400px,100%);margin:0}
+.toast{position:fixed;z-index:9;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translate(-50%,-140%);padding:11px 20px;border-radius:999px;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.toast.on{transform:translate(-50%,0)}
+.saver .aurora i{animation:none}
+.saver .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--sv)}
+@media (prefers-reduced-motion:reduce){.aurora i,.air .rec .ring,.typing::after{animation:none}.view.on,.ev{animation:none}.reveal{transition:none}}
+</style>
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="gate" id="gate"><div class="card glass"><h1 style="font-size:36px">Asszisztens</h1><p class="dimp">Jelentkezz be, hogy a telefonod és a géped ugyanazt lássa.</p><button class="btn" id="gg">Belépés Google-fiókkal</button><input class="in" id="ge" type="email" placeholder="E-mail" autocomplete="email" aria-label="E-mail" style="width:100%;margin-top:16px"><input class="in" id="gp" type="password" placeholder="Jelszó" autocomplete="current-password" aria-label="Jelszó" style="width:100%;margin-top:8px"><div class="add"><button class="btn ghost" id="gl">Belépés</button><button class="btn ghost" id="gr">Regisztráció</button></div><p class="note" id="gerr"></p></div></div>
+<div class="toast glass" id="toast" role="status"></div>
+<div class="wrap">
+  <div class="top">
+    <div><h1 id="hi">Szép napot</h1><p class="date" id="date"></p></div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><button class="save glass" id="save" aria-pressed="false">Takarékos mód</button><span class="chip" id="net">Online</span></div>
+  </div>
+  <p class="note">A hang- és fotófelismerés még minta, az AI a következő lépésben jön.</p>
+
+  <section class="view on" id="v0">
+    <div class="card glass" style="margin-top:26px"><h2>Mai áttekintő</h2><div id="brief"></div><div class="stats" id="stats"></div></div>
+    <div class="card glass"><h2>Kérdezz a napodról</h2><div class="add" style="margin-top:6px"><input class="in" id="vq" placeholder="Például: mi van holnap?" aria-label="Kérdés"><button class="btn mic-s" id="vqm" aria-label="Kérdezés hangból"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn" id="vqb">Kérdezés</button></div><div class="ans" id="vans"></div></div>
+    <div class="card glass"><h2>Heti összegzés</h2><div class="wk" id="wk"></div><div class="wl" id="wl"></div><p class="dimp" id="wks"></p></div>
+  </section>
+  <section class="view" id="v5">
+    <div class="seg"><button data-m="0" aria-pressed="true">Hang</button><button data-m="1" aria-pressed="false">Írás</button><button data-m="2" aria-pressed="false">Fotó</button><button class="close" id="x">Bezár</button></div>
+    <div class="mode on" id="m0">
+    <div class="rec"><span class="ring"></span><span class="ring"></span>
+      <button id="mic" aria-label="Felvétel indítása és leállítása">
+        <svg class="mc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        <svg class="stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="currentColor"/></svg>
+      </button></div>
+    <div class="time" id="time">0:00</div>
+    <p class="hint" id="hint">Koppints, és mondd el, mi jár a fejedben</p>
+    <div id="wave" aria-hidden="true"></div></div>
+    <div class="mode" id="m1"><textarea class="in" id="ti" placeholder="Írd ide, amit rögzíteni szeretnél. Például: holnap 9-kor megbeszélés, pénteken hívjam fel a szervizt." aria-label="Szöveg"></textarea><button class="btn" id="proc">Feldolgozás</button></div>
+    <div class="mode" id="m2"><button class="btn" id="pick" style="margin-top:22px">Fotó készítése vagy kiválasztása</button><input type="file" accept="image/*" id="file" hidden><div class="pv" id="pv" hidden></div><p class="note">Látványterv: a kiolvasott szöveg most minta, az igazi felismerés a Gemini bekötése után jön.</p></div>
+    <div id="res" hidden>
+      <div class="card glass"><h2 id="trh">Átirat</h2><div id="tr"></div></div>
+      <div class="card glass reveal" id="sum"><h2>Összefoglaló</h2><div id="sumt"></div></div>
+      <div class="card glass reveal" id="ext"><h2>Ezeket találtam</h2>
+        <div id="xr"></div>
+        
+        
+        <button class="btn" id="keep">Mentés a teendők és a naptár közé</button><button class="btn ghost" id="keepn">Mentés jegyzetként</button></div>
+    </div>
+  </section>
+
+  <section class="view" id="v1">
+    <div class="card glass" style="margin-top:26px"><h2 id="cnt"></h2><div class="prog"><b id="bar"></b></div></div>
+    <div id="list"></div>
+    <div class="add"><input class="in" id="nt" placeholder="Új teendő" aria-label="Új teendő"><button class="btn" id="addb">Hozzáadás</button></div>
+  </section>
+
+  <section class="view" id="v2">
+    <div class="week" id="week" style="margin-top:26px"></div>
+    <div id="evs"></div>
+  </section>
+
+  <section class="view" id="v3">
+    <input class="in" id="q" placeholder="Keresés a jegyzetek között" aria-label="Keresés" style="width:100%;margin-top:26px">
+    <div class="tags" id="tagrow"></div><div id="notes"></div>
+    <div class="card glass"><h2>Kérdezz a jegyzeteidből</h2>
+      <div class="add" style="margin-top:6px"><input class="in" id="ask" placeholder="Például: mikor kezdődik a leltár?" aria-label="Kérdés"><button class="btn" id="askb">Kérdezés</button></div>
+      <div class="ans" id="ans"></div></div>
+  </section>
+  <section class="view" id="v4">
+    <h2 style="margin-top:26px">Még</h2><div class="tiles" id="tiles"></div>
+    <div class="card glass"><h2>Színtéma</h2><div class="themes" id="themes"></div></div>
+    <div class="card glass"><h2>Gemini kulcs</h2><input class="in" id="key" type="password" placeholder="Ide kerül majd a kulcsod" aria-label="Gemini kulcs" style="width:100%"><p class="dimp">Csak ezen az eszközön tárolódik, nem kerül a szinkronba.</p></div>
+    <div class="card glass"><h2>Fiók és szinkron</h2><p class="dimp" id="acc" style="margin:0 0 10px">Nincs bejelentkezve</p><button class="btn ghost" id="lo" style="margin-top:0">Kilépés</button></div>
+    <div class="card glass"><h2>Offline mód</h2><p class="dimp" style="margin:0 0 10px">Net nélkül is rögzíthetsz, a bejegyzések helyben maradnak, és a kapcsolat visszatértével szinkronizálódnak.</p><button class="btn ghost" id="offb" style="margin-top:0">Offline mód kipróbálása</button></div>
+  </section>
+  <section class="view" id="v6">
+    <div class="seg"><button class="close" id="b6" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Kapcsolatok</h2>
+    <div class="card glass sm" id="cstat"></div>
+    <input class="in" id="cq" placeholder="Keresés névben vagy beosztásban" aria-label="Keresés" style="width:100%;margin-top:12px">
+    <div id="clist"></div>
+    <div class="add"><input class="in" id="cn" placeholder="Új kapcsolat neve" aria-label="Név"><button class="btn" id="cadd">Hozzáadás</button></div>
+    <button class="btn ghost" id="cscan">Névjegy beolvasása fotóról</button><input type="file" accept="image/*" id="cfile" hidden><div class="pv" id="cpv" hidden></div>
+    <p class="note">Minta adatok. Az igazi névjegy-felismerés a Gemini bekötése után jön.</p>
+  </section>
+  <section class="view" id="v7">
+    <div class="seg"><button class="close" id="b7" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Kiadások</h2>
+    <div class="card glass"><div id="etot"></div><div class="stack" id="stack"></div><div class="leg" id="leg"></div></div>
+    <div id="elist"></div>
+    <div class="add"><input class="in" id="en" placeholder="Mire?" aria-label="Mire"><input class="in" id="ea" inputmode="numeric" placeholder="Ft" aria-label="Összeg" style="max-width:96px"><button class="btn" id="eadd">Hozzáadás</button></div>
+    <button class="btn ghost" id="escan">Számla fotózása</button><input type="file" accept="image/*" id="efile" hidden>
+    <div id="econf"></div>
+  </section>
+  <section class="view" id="v8">
+    <div class="seg"><button class="close" id="b8" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Vásárlólista</h2>
+    <div class="card glass sm" id="scnt"></div>
+    <div id="slist"></div>
+    <div class="add"><input class="in" id="si" placeholder="Pl. tej, tojás és kenyér" aria-label="Új tétel"><button class="btn mic-s" id="sm" aria-label="Hozzáadás hangból"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn" id="sa">Hozzáadás</button></div>
+    <button class="btn ghost" id="sp">Lista fotóról</button><input type="file" accept="image/*" id="sf" hidden><div class="pv" id="spv" hidden></div>
+    <button class="btn ghost" id="sc">Megvett tételek törlése</button>
+  </section>
+  <section class="view" id="v9">
+    <div class="seg"><button class="close" id="b9" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Szokások</h2>
+    <div id="hlist"></div>
+    <div class="add"><input class="in" id="hi" placeholder="Új szokás" aria-label="Új szokás"><button class="btn" id="ha">Hozzáadás</button></div>
+    <p class="note">Koppints a mai napra a pipáláshoz.</p>
+  </section>
+  <section class="view" id="v10">
+    <div class="seg"><button class="close" id="b10" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Fókusz</h2>
+    <div class="fring"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--amber)"/><stop offset="1" style="stop-color:var(--flame)"/></linearGradient></defs><circle cx="100" cy="100" r="88" fill="none" stroke-width="10" style="stroke:color-mix(in srgb,var(--ink) 12%,transparent)"/><circle id="fr" cx="100" cy="100" r="88" fill="none" stroke="url(#fg)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="553" style="transition:stroke-dashoffset .4s linear"/></svg><div class="ftime" id="ft">25:00</div></div>
+    <div class="seg" id="fp" style="justify-content:center;margin-top:0"><button data-min="15" aria-pressed="false">15 perc</button><button data-min="25" aria-pressed="true">25 perc</button><button data-min="45" aria-pressed="false">45 perc</button></div>
+    <select class="in" id="fs" aria-label="Mire fókuszálsz"></select>
+    <button class="btn" id="fgo">Indítás</button><button class="btn ghost" id="frs">Újra</button>
+    <p class="dimp" id="fc" style="text-align:center">0 munkamenet ma</p>
+  </section>
+  <section class="view" id="v11">
+    <div class="seg"><button class="close" id="b11" style="margin-left:0">Vissza</button></div>
+    <h2 style="margin-top:14px">Export</h2>
+    <div class="tags" id="xk"></div>
+    <textarea class="in" id="xo" readonly aria-label="Export tartalma"></textarea>
+    <button class="btn" id="xc">Másolás</button><button class="btn ghost" id="xs">Megosztás</button><button class="btn ghost" id="xd">Letöltés</button>
+    <p class="note">A naptár-export .ics formátum, amit a telefon naptára és a Google Naptár is importál. Ebben az előnézetben a letöltést a böngész letilthatja, a Másolás mindenképpen működik.</p>
+  </section>
+</div>
+
+<button class="fab" id="fab" aria-label="Új bejegyzés">+</button>
+<nav class="dock glass" id="dock" aria-label="Fő menü" role="tablist">
+  <span class="pill" id="pill"></span>
+  <button role="tab" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Ma</button>
+  <button role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg>Teendők</button>
+  <button role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>Naptár</button>
+  <button role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h5"/></svg>Jegyzetek</button>
+  <button role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>Még</button>
+</nav>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const now=new Date(),h=now.getHours();
+$('#hi').textContent=h<5?'Jó éjszakát':h<10?'Jó reggelt':h<18?'Szép napot':'Jó estét';
+$('#date').textContent=now.toLocaleDateString('hu-HU',{weekday:'long',month:'long',day:'numeric'});
+const saver=$('#save');
+saver.onclick=()=>{const on=document.body.classList.toggle('saver');saver.setAttribute('aria-pressed',on)};
+if(matchMedia('(prefers-reduced-motion:reduce)').matches)document.body.classList.add('saver');
+
+/* glow that follows the finger */
+const lit=e=>{const g=e.target.closest&&e.target.closest('.glass');if(!g)return;const r=g.getBoundingClientRect();g.style.setProperty('--mx',e.clientX-r.left+'px');g.style.setProperty('--my',e.clientY-r.top+'px');g.classList.add('lit')};
+addEventListener('pointermove',lit);addEventListener('pointerdown',lit);
+addEventListener('pointerout',e=>{const g=e.target.closest&&e.target.closest('.glass');if(g)g.classList.remove('lit')});
+addEventListener('pointerup',()=>setTimeout(()=>$$('.lit').forEach(g=>g.classList.remove('lit')),350));
+
+/* tabs */
+const tabs=$$('#dock button');
+function go(i){$$('.view').forEach((v,j)=>v.classList.toggle('on',i===j));tabs.forEach((t,j)=>t.setAttribute('aria-selected',i===j));$('#pill').style.transform=`translateX(${i*100}%)`}
+tabs.forEach((t,i)=>t.onclick=()=>go(i));
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.k);toast.k=setTimeout(()=>t.classList.remove('on'),2200)}
+async function typeWords(el,text,ms){el.textContent='';el.classList.add('typing');for(const w of text.split(' ')){el.textContent+=(el.textContent?' ':'')+w;await sleep(ms)}el.classList.remove('typing')}
+
+/* recording (simulated) */
+const wave=$('#wave'),bars=[];
+for(let i=0;i<30;i++){const b=document.createElement('i');b.className='bar';wave.append(b);bars.push(b)}
+let rec=false,t0=0,raf=0,busy=false;
+const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+function frame(t){if(!rec)return;bars.forEach((b,i)=>{const env=.35+.65*Math.abs(Math.sin(t/420+i*.55));b.style.transform=`scaleY(${Math.max(.07,Math.random()*.95*env)})`});$('#time').textContent=fmt((t-t0)/1000);raf=requestAnimationFrame(frame)}
+$('#mic').onclick=async()=>{
+  if(busy)return;
+  if(!rec){rec=true;document.body.classList.add('air');$('#res').hidden=true;$$('.reveal').forEach(r=>r.classList.remove('show'));$('#hint').textContent='Hallgatlak. Koppints a leállításhoz';t0=performance.now();raf=requestAnimationFrame(frame);return}
+  rec=false;busy=true;cancelAnimationFrame(raf);document.body.classList.remove('air');bars.forEach(b=>b.style.transform='scaleY(.06)');$('#hint').textContent='Átírom a felvételt…';
+  const res=$('#res');res.hidden=false;
+  await typeWords($('#tr'),'Holnap reggel nyolckor megbeszélés a raktárvezetővel a leltár ütemezéséről. Kedden rendeljem meg a kézi szkennerek tartalék akkumulátorait, pénteken pedig hívjam fel a szervizt a targonca éves vizsgája miatt.',70);
+  $('#hint').textContent='Kész. Koppints egy új felvételhez';
+  $('#sumt').textContent='Három dolog került elő: holnap reggeli egyeztetés a leltárról, akkumulátor-rendelés kedden és szerviz-hívás pénteken.';
+  $('#sum').classList.add('show');await sleep(450);$('#ext').style.setProperty('--d','.1s');$('#ext').classList.add('show');busy=false};
+
+/* todos */
+const todos=[];
+function burst(x,y){if(document.body.classList.contains('saver'))return;const c=['#7ae7ff','#3b82f6','#d946ef','#a78bfa'];for(let i=0;i<14;i++){const s=document.createElement('i');s.className='sp';const a=Math.random()*6.28,d=30+Math.random()*44;s.style.cssText=`left:${x}px;top:${y}px;background:${c[i%4]};--dx:${Math.cos(a)*d}px;--dy:${Math.sin(a)*d}px`;document.body.append(s);s.onanimationend=()=>s.remove()}}
+function drawTodos(){const L=$('#list');L.innerHTML='';todos.forEach((o,i)=>{const r=document.createElement('div');r.className='row glass'+(o.done?' done':'');r.innerHTML=`<button class="ck" aria-label="Kész"></button><span class="t"></span><span class="chip">${o.d}</span>`;$('.t',r).textContent=o.t;$('.ck',r).onclick=e=>{o.done=!o.done;o.at=o.done?dayStr(0):null;r.classList.toggle('done',o.done);if(o.done){const b=e.currentTarget.getBoundingClientRect();burst(b.left+15,b.top+15)}count()};L.append(r)});count()}
+function count(){const n=todos.filter(o=>!o.done).length;$('#cnt').textContent=n?n+' nyitott teendő':'Minden kész';$('#bar').style.width=(todos.length?(todos.length-n)/todos.length*100:0)+'%'}
+function addTodo(){const v=$('#nt').value.trim();if(!v)return;todos.unshift({t:v,d:'ma'});$('#nt').value='';drawTodos()}
+$('#addb').onclick=addTodo;$('#nt').onkeydown=e=>{if(e.key==='Enter')addTodo()};
+
+/* calendar */
+const evts={};
+let sel=0;const mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
+function drawWeek(){const W=$('#week');W.innerHTML='';const names=['h','k','sze','cs','p','szo','v'];for(let i=0;i<7;i++){const dt=new Date(mon);dt.setDate(mon.getDate()+i);const off=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5);const b=document.createElement('button');b.className='d glass'+(off===0?' today':'')+(off===sel?' sel':'');b.innerHTML=`<small>${names[i]}</small><b>${dt.getDate()}</b>`;b.onclick=()=>{sel=off;drawWeek();drawEvs()};W.append(b)}}
+function drawEvs(){const E=$('#evs');E.innerHTML='';const l=evts[sel]||[];if(!l.length){E.innerHTML='<p class="empty">Erre a napra nincs esemény. Mondd el hangból, és beteszem.</p>';return}l.sort((a,b)=>a.t.localeCompare(b.t)).forEach((e,i)=>{const r=document.createElement('div');r.className='ev glass';r.style.cssText=`--c:${e.c};animation-delay:${i*80}ms`;r.innerHTML=`<i></i><div><b></b><span style="color:var(--dim)">${e.t}</span></div>`;$('b',r).textContent=e.n;E.append(r)})}
+
+$('#keep').onclick=()=>{todos.unshift({t:'Akkumulátorok megrendelése',d:'kedd'},{t:'Szerviz felhívása a targonca vizsgája miatt',d:'péntek'});(evts[1]=evts[1]||[]).push({t:'08:00',n:'Megbeszélés a raktárvezetővel',c:'#d946ef'});drawTodos();drawEvs();toast('Elmentve: 2 teendő és 1 esemény')};
+
+/* notes */
+const notes=[];
+function drawNotes(){const q=$('#q').value.toLowerCase(),N=$('#notes');N.innerHTML='';const f=notes.filter(n=>(n.t+n.b).toLowerCase().includes(q));if(!f.length){N.innerHTML='<p class="empty">Nincs találat. Mondd el hangból, és eltárolom.</p>';return}f.forEach(n=>{const d=document.createElement('div');d.className='nt glass';d.innerHTML='<h2></h2><p></p>';$('h2',d).textContent=n.t;$('p',d).textContent=n.b;N.append(d)})}
+$('#q').oninput=drawNotes;
+async function ask(){const q=$('#ask').value.toLowerCase().split(/\s+/).filter(w=>w.length>3).map(w=>w.slice(0,-1));const hit=notes.find(n=>q.some(w=>(n.t+n.b).toLowerCase().includes(w)));await typeWords($('#ans'),hit?'A jegyzeteid szerint: '+hit.b:'Erre nem találtam jegyzetet. Mondd el hangból, és eltárolom.',55)}
+$('#askb').onclick=ask;$('#ask').onkeydown=e=>{if(e.key==='Enter')ask()};
+
+drawTodos();drawWeek();drawEvs();drawNotes();
+
+/* ---- 1. kör ---- */
+let last=0,pend=[];
+function go(i){if(i!==5)last=i;$$('.view').forEach(v=>v.classList.toggle('on',v.id==='v'+i));const ti=i>5?4:i;tabs.forEach((t,j)=>t.setAttribute('aria-selected',ti===j));const p=$('#pill');p.style.opacity=i===5?0:1;p.style.transform=`translateX(${Math.min(ti,4)*100}%)`;$('#fab').classList.toggle('off',i===5);if(i===0){drawMa();drawWk()}if(i===10)fSel();if(i===11)xo();scrollTo(0,0)}
+const SAMPLE='Holnap reggel nyolckor megbeszélés a raktárvezetővel a leltár ütemezéséről. Kedden rendeljem meg a kézi szkennerek tartalék akkumulátorait. Pénteken hívjam fel a szervizt a targonca éves vizsgája miatt.';
+const PHOTO='Havi leltárlista leadása: péntek. Targonca szerviz időpont: kedden 14:00-kor. Munkaruha-rendelés véglegesítése jövő héten.';
+const DAYS=/holnap|\bma\b|hétfő|kedd|szerd|csütörtök|péntek|szombat|vasárnap/i;
+function extract(t){pend=t.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4).map(s=>({t:s.replace(/[.!?]+$/,''),d:(s.match(DAYS)||['ma'])[0].toLowerCase()}))}
+async function show(label,text){const res=$('#res');res.hidden=false;$$('.reveal').forEach(r=>r.classList.remove('show'));$('#trh').textContent=label;extract(text);await typeWords($('#tr'),text,label==='Átirat'?70:28);$('#sumt').textContent='A szövegből '+pend.length+' tennivaló került elő.';$('#sum').classList.add('show');const xr=$('#xr');xr.innerHTML='';pend.forEach(p=>{const r=document.createElement('div');r.className='x';r.innerHTML='<span></span><span class="chip"></span>';r.firstChild.textContent=p.t;r.lastChild.textContent=p.d;xr.append(r)});await sleep(450);$('#ext').style.setProperty('--d','.1s');$('#ext').classList.add('show');res.scrollIntoView({behavior:'smooth',block:'nearest'})}
+$('#mic').onclick=async()=>{if(busy)return;if(!rec){rec=true;document.body.classList.add('air');$('#res').hidden=true;$('#hint').textContent='Hallgatlak. Koppints a leállításhoz';t0=performance.now();raf=requestAnimationFrame(frame);return}rec=false;busy=true;cancelAnimationFrame(raf);document.body.classList.remove('air');bars.forEach(b=>b.style.transform='scaleY(.06)');$('#hint').textContent='Átírom a felvételt…';await show('Átirat',SAMPLE);$('#hint').textContent='Kész. Koppints egy új felvételhez';busy=false};
+$('#keep').onclick=()=>{const H={nyolckor:8,kilenckor:9,tízkor:10,tizenegykor:11,délben:12};pend.forEach(p=>{todos.unshift({t:p.t,d:p.d});const m=p.t.match(/(\d{1,2})(?::(\d{2}))?\s*(?:-kor|órakor)/i),w=p.t.toLowerCase().match(/nyolckor|kilenckor|tízkor|tizenegykor|délben/),hr=m?+m[1]:w?H[w[0]]:null;if(hr!==null){const off=p.d==='holnap'?1:p.d==='ma'?0:null;if(off!==null)(evts[off]=evts[off]||[]).push({t:String(hr).padStart(2,'0')+':'+((m&&m[2])||'00'),n:p.t,c:'#d946ef'})}});drawTodos();drawEvs();toast('Elmentve: '+pend.length+' elem')};
+$('#fab').onclick=()=>go(5);
+$('#x').onclick=()=>{rec=false;cancelAnimationFrame(raf);document.body.classList.remove('air');go(last)};
+$$('.seg [data-m]').forEach(b=>b.onclick=()=>{const m=+b.dataset.m;$$('.mode').forEach((x,i)=>x.classList.toggle('on',i===m));$$('.seg [data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#res').hidden=true});
+$('#proc').onclick=()=>{const v=$('#ti').value.trim();if(!v){toast('Írj be valamit');return}show('Szöveg',v)};
+$('#pick').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#pv');pv.innerHTML='';const im=new Image();im.alt='Feltöltött fotó';im.src=URL.createObjectURL(f);const sc=document.createElement('i');sc.className='scan';pv.append(im,sc);pv.hidden=false;$('#res').hidden=true;await sleep(2200);sc.remove();await show('Kiolvasott szöveg',PHOTO)};
+function drawMa(){const open=todos.filter(o=>!o.done),tod=evts[0]||[],nx=tod[0];$('#stats').innerHTML='<div class="st"><b>'+open.length+'</b>nyitott teendő</div><div class="st"><b>'+tod.length+'</b>mai esemény</div><div class="st"><b>'+(todos.length-open.length)+'</b>kész</div>';$('#brief').textContent=(open.length?'Ma '+open.length+' nyitott teendőd van, az első: '+open[0].t+'.':'Minden teendőd kész, szabad a nap.')+' '+(nx?'Következő esemény: '+nx.n+', '+nx.t+'.':'Mára nincs esemény a naptárban.')}
+function drawWk(){const n=['h','k','sze','cs','p','szo','v'],full=['hétfő','kedd','szerda','csütörtök','péntek','szombat','vasárnap'],m0=-((now.getDay()+6)%7),v=[];for(let i=0;i<7;i++){const ds=dayStr(m0+i);v.push(todos.filter(t=>t.at===ds).length)}const mx=Math.max(1,...v),sum=v.reduce((a,b)=>a+b,0);$('#wk').innerHTML=v.map((x,i)=>'<i style="--h:'+Math.max(6,x/mx*100)+'%;--i:'+i+'"></i>').join('');$('#wl').innerHTML=n.map(x=>'<span>'+x+'</span>').join('');$('#wks').textContent=sum?'Ezen a héten '+sum+' teendőt zártál le, a legerősebb napod: '+full[v.indexOf(Math.max(...v))]+'.':'Ezen a héten még nem zártál le teendőt.'}
+function answer(q){q=q.toLowerCase();if(/holnap/.test(q)){const l=evts[1]||[];return l.length?'Holnap: '+l.map(e=>e.t+' '+e.n).join('; ')+'.':'Holnapra nincs esemény.'}if(/\bma\b|mai|teend/.test(q)){const o=todos.filter(t=>!t.done);return o.length?'Nyitott teendők: '+o.map(t=>t.t).join('; ')+'.':'Minden teendőd kész.'}const w=q.split(/\s+/).filter(x=>x.length>3).map(x=>x.slice(0,-1)),hit=notes.find(n=>w.some(x=>(n.t+n.b).toLowerCase().includes(x)));return hit?'A jegyzeteid szerint: '+hit.b:'Erre nem találtam adatot.'}
+$('#vqb').onclick=()=>{const q=$('#vq').value.trim();if(q)typeWords($('#vans'),answer(q),45)};$('#vq').onkeydown=e=>{if(e.key==='Enter')$('#vqb').click()};
+$('#vqm').onclick=()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Ezen az eszközön nincs hangfelismerés');return}try{const r=new R();r.lang='hu-HU';r.onresult=e=>{$('#vq').value=e.results[0][0].transcript;$('#vqb').click()};r.onerror=()=>toast('A mikrofon nem érhető el');r.start();toast('Hallgatlak…')}catch(e){toast('A mikrofon nem érhető el')}};
+const TL=[['Kapcsolatok','névjegyek, ki mit kért','2'],['Kiadások','számlák, összegek','2'],['Vásárlólista','hangból és fotóról','3'],['Szokások','napi sorozatok','3'],['Fókusz','időzítő','3'],['Export','naptár, megosztás','3']];
+TL.forEach(([a,b,k])=>{const t=document.createElement('button');t.className='tile glass';t.innerHTML='<b></b><small></small>';$('b',t).textContent=a;$('small',t).textContent=b;t.onclick=()=>toast(a+': a '+k+'. körben készül');$('#tiles').append(t)});
+const TH={sun:['Napfény','#ffd54a','#ffa573'],kek:['Kék','#2563eb','#d02be0'],smaragd:['Smaragd','#059669','#eab308'],lila:['Lila','#7c3aed','#ec4899'],jeg:['Jég','#0ea5e9','#e0f2fe']};
+function setTh(k){document.documentElement.dataset.th=k;try{localStorage.setItem('th2',k)}catch(e){}$$('#themes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k))}
+Object.entries(TH).forEach(([k,[n,c1,c2]])=>{const b=document.createElement('button');b.dataset.k=k;b.innerHTML='<i></i>'+n;$('i',b).style.background='linear-gradient(135deg,'+c1+','+c2+')';b.onclick=()=>setTh(k);$('#themes').append(b)});
+let th0='sun';try{th0=localStorage.getItem('th2')||'sun'}catch(e){}setTh(th0);
+$('#key').onchange=()=>{try{localStorage.setItem('gk',$('#key').value);toast('Mentve ezen az eszközön')}catch(e){toast('A böngésző nem engedi a mentést')}};
+drawMa();drawWk();
+
+/* ---- 2. kör ---- */
+function E(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+var tagF='',favF=false;
+const ft=n=>n.toLocaleString('hu-HU')+' Ft',today=()=>now.toLocaleDateString('hu-HU',{month:'short',day:'numeric'});
+const CATS={'Élelmiszer':'--amber','Közlekedés':'--ember','Munka':'--flame','Egyéb':'--rose'};
+const contacts=[];
+const expenses=[];
+
+
+function drawNotes(){const q=$('#q').value.toLowerCase(),N=$('#notes'),R=$('#tagrow');R.innerHTML='';const all=[...new Set(notes.flatMap(n=>n.tg||[]))];
+[['Mind',()=>{tagF='';favF=false},!tagF&&!favF],['★ Kedvencek',()=>{favF=true;tagF=''},favF],...all.map(t=>['#'+t,()=>{tagF=t;favF=false},tagF===t])].forEach(([l,f,on])=>{const b=E('button','tg',l);b.setAttribute('aria-pressed',on);b.onclick=()=>{f();drawNotes()};R.append(b)});
+N.innerHTML='';const f=notes.filter(n=>(n.t+n.b+(n.tg||[]).join(' ')).toLowerCase().includes(q)&&(!tagF||(n.tg||[]).includes(tagF))&&(!favF||n.fav));
+if(!f.length){N.append(E('p','empty','Nincs találat. Mondd el hangból, és eltárolom.'));return}
+f.forEach(n=>{const d=E('div','nt glass'),s=E('button','star'+(n.fav?' on':''),n.fav?'★':'☆');s.setAttribute('aria-label','Kedvenc');s.onclick=()=>{n.fav=!n.fav;drawNotes()};d.append(s,E('h2','',n.t),E('p','',n.b));const tr=E('div','tags');(n.tg||[]).forEach(t=>tr.append(E('span','chip','#'+t)));const add=E('input','in');add.placeholder='+ címke';add.setAttribute('aria-label','Új címke');add.style.cssText='width:100px;padding:5px 12px;border-radius:999px;font-size:13px';add.onkeydown=e=>{const v=add.value.trim().toLowerCase().replace(/^#/,'');if(e.key==='Enter'&&v){n.tg=n.tg||[];if(!n.tg.includes(v))n.tg.push(v);drawNotes()}};tr.append(add);d.append(tr);N.append(d)})}
+$('#keepn').onclick=()=>{const t=$('#tr').textContent.trim();if(!t)return;const lab=$('#trh').textContent;notes.unshift({t:t.split(' ').slice(0,4).join(' ')+'…',b:t,tg:[lab==='Átirat'?'hang':lab==='Szöveg'?'írás':'fotó']});drawNotes();toast('Jegyzetként elmentve')};
+
+function drawCt(){const q=$('#cq').value.toLowerCase(),L=$('#clist');L.innerHTML='';const open=contacts.reduce((s,c)=>s+c.asks.filter(a=>!a.d).length,0);$('#cstat').textContent=open?open+' nyitott kérés vár rád':'Nincs nyitott kérés';
+contacts.filter(c=>(c.n+' '+c.r).toLowerCase().includes(q)).forEach(c=>{const n=c.asks.filter(a=>!a.d).length,el=E('div','ct glass'+(c.open?' open':'')),hd=E('div','hd'),mid=E('div');mid.append(E('b','',c.n),E('br'),E('small','',c.r));hd.append(E('span','av',c.n.split(' ').map(w=>w[0]).slice(0,2).join('')),mid,E('span','chip',n?n+' kérés':'rendben'));hd.onclick=()=>{c.open=!c.open;el.classList.toggle('open',c.open)};
+const bd=E('div','bd');if(c.p){const a=E('a','',c.p);a.href='tel:'+c.p.replace(/\s/g,'');bd.append(a)}
+c.asks.forEach(k=>{const r=E('div','ask'+(k.d?' done':'')),b=E('button','ck');b.setAttribute('aria-label','Kész');b.onclick=()=>{k.d=!k.d;c.open=true;drawCt()};r.append(b,E('span','',k.t));bd.append(r)});
+const i=E('input','in');i.placeholder='Új kérés tőle';i.setAttribute('aria-label','Új kérés');i.style.cssText='width:100%;margin-top:8px';i.onkeydown=e=>{if(e.key==='Enter'&&i.value.trim()){c.asks.push({t:i.value.trim(),d:false});c.open=true;drawCt()}};bd.append(i);el.append(hd,bd);L.append(el)})}
+$('#cq').oninput=drawCt;
+$('#cadd').onclick=()=>{const n=$('#cn').value.trim();if(!n)return;contacts.unshift({n,r:'Új kapcsolat',p:'',asks:[],open:true});$('#cn').value='';drawCt()};
+$('#cscan').onclick=()=>$('#cfile').click();
+$('#cfile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#cpv');pv.innerHTML='';const im=new Image();im.alt='Névjegy';im.src=URL.createObjectURL(f);pv.append(im,E('i','scan'));pv.hidden=false;await sleep(2200);pv.hidden=true;contacts.unshift({n:'Szabó Anna',r:'Beszerzés (minta)',p:'+36 20 555 0101',asks:[],open:true});drawCt();toast('Névjegy hozzáadva (minta)')};
+
+function drawEx(){const tot=expenses.reduce((s,e)=>s+e.a,0),by={};expenses.forEach(e=>by[e.c]=(by[e.c]||0)+e.a);
+const T=$('#etot');T.innerHTML='';const sm=E('small','','ebben a hónapban');sm.style.color='var(--dim)';T.append(E('div','big',ft(tot)),sm);
+const S=$('#stack'),G=$('#leg');S.innerHTML='';G.innerHTML='';Object.entries(by).forEach(([c,v])=>{const col='var('+(CATS[c]||'--rose')+')',i=E('i');i.style.cssText='flex:'+v+';background:'+col;S.append(i);const s=E('span'),b=E('b');b.style.background=col;s.append(b,c+' '+ft(v));G.append(s)});
+const L=$('#elist');L.innerHTML='';expenses.forEach(e=>{const r=E('div','ex glass'),m=E('div','t');m.append(E('b','',e.t),E('small','',e.c+', '+e.d));r.append(m,E('span','a',ft(e.a)));L.append(r)})}
+function guess(t){t=t.toLowerCase();return /tank|benzin|busz|vonat|taxi|parkol/.test(t)?'Közlekedés':/bevásár|kenyér|kávé|étel|péksüt|élelm|pizza/.test(t)?'Élelmiszer':/munk|védő|szerszám|iroda|kesztyű/.test(t)?'Munka':'Egyéb'}
+$('#eadd').onclick=()=>{const t=$('#en').value.trim(),a=parseInt($('#ea').value.replace(/\D/g,''),10);if(!t||!a){toast('Írd be, mire és mennyit');return}expenses.unshift({t,a,c:guess(t),d:today()});$('#en').value='';$('#ea').value='';drawEx()};
+$('#escan').onclick=()=>$('#efile').click();
+$('#efile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const box=$('#econf');box.innerHTML='';const pv=E('div','pv'),im=new Image();im.alt='Számla';im.src=URL.createObjectURL(f);pv.append(im,E('i','scan'));box.append(pv);await sleep(2200);box.innerHTML='';const c=E('div','card glass');c.append(E('h2','','Ezt olvastam ki'));[['rn','Kereskedő','Spar'],['ra','Összeg (Ft)','12390'],['rc','Kategória','Élelmiszer']].forEach(([id,ph,v])=>{const i=E('input','in');i.id=id;i.value=v;i.placeholder=ph;i.setAttribute('aria-label',ph);i.style.cssText='width:100%;margin-top:8px';c.append(i)});const sv=E('button','btn','Mentés a kiadások közé');sv.onclick=()=>{const a=parseInt($('#ra').value.replace(/\D/g,''),10);if(!a){toast('Az összeg hiányzik');return}expenses.unshift({t:$('#rn').value||'Számla',a,c:$('#rc').value||'Egyéb',d:today()});box.innerHTML='';drawEx();toast('Kiadás elmentve')};c.append(sv,E('p','note','Minta értékek: az igazi kiolvasás a Gemini bekötése után jön.'));box.append(c)};
+
+function answer(q){const L=q.toLowerCase(),src=[],R=text=>({text,src}),tok=L.split(/\s+/).filter(x=>x.length>3).map(x=>x.slice(0,-1)),has=s=>tok.some(x=>s.toLowerCase().includes(x));
+if(/holnap/.test(L)){const l=evts[1]||[];src.push('Naptár');return R(l.length?'Holnap: '+l.map(e=>e.t+' '+e.n).join('; ')+'.':'Holnapra nincs esemény.')}
+if(/kiad|költ|forint|számla|mennyit/.test(L)){if(!expenses.length)return R('Még nincs rögzített kiadásod.');const tot=expenses.reduce((s,e)=>s+e.a,0),by={};expenses.forEach(e=>by[e.c]=(by[e.c]||0)+e.a);const top=Object.entries(by).sort((a,b)=>b[1]-a[1])[0];src.push('Kiadások');return R('Ebben a hónapban '+ft(tot)+' ment el, a legtöbb itt: '+top[0]+' ('+ft(top[1])+').')}
+const c=contacts.find(c=>has(c.n));if(c){src.push('Kapcsolatok');const o=c.asks.filter(a=>!a.d);return R(c.n+' ('+c.r+(c.p?', '+c.p:'')+'): '+(o.length?'nyitott kérések: '+o.map(a=>a.t).join('; ')+'.':'nincs nyitott kérés.'))}
+if(/teend|\bma\b|mai/.test(L)){const o=todos.filter(t=>!t.done);src.push('Teendők');return R(o.length?'Nyitott teendők: '+o.map(t=>t.t).join('; ')+'.':'Minden teendőd kész.')}
+const n=notes.find(n=>has(n.t+n.b));if(n){src.push('Jegyzet: '+n.t);return R(n.b)}
+return R('Erre nem találtam adatot. Mondd el hangból, és eltárolom.')}
+async function say(el,r){await typeWords(el,r.text,40);const s=E('div','srcs');r.src.forEach(x=>s.append(E('span','chip',x)));el.append(s)}
+async function ask(){const q=$('#ask').value.trim();if(q)say($('#ans'),answer(q))}
+$('#vqb').onclick=()=>{const q=$('#vq').value.trim();if(q)say($('#vans'),answer(q))};
+$('#vq').placeholder='Például: mennyit költöttem? vagy mit kért Béla?';$('#ask').placeholder='Kérdezz a jegyzeteidből és mindenből';
+const tl=$$('#tiles .tile');tl[0].onclick=()=>go(6);tl[1].onclick=()=>go(7);
+$('#b6').onclick=$('#b7').onclick=()=>go(4);
+drawNotes();drawCt();drawEx();
+
+/* ---- 3. kör ---- */
+function isOff(){return off||!navigator.onLine}
+var off=false,qn=0,fT=0,fEnd=0,fTot=1500,fLeft=1500,fRun=false,fDone=0,xKey='cal';
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.k);toast.k=setTimeout(()=>t.classList.remove('on'),2200);if(isOff()&&/lmentve|hozzáadva|Mentve/.test(m)){qn++;net()}}
+function net(){$('#net').textContent=isOff()?(qn?'Offline, '+qn+' vár':'Offline'):'Online';$('#offb').textContent=off?'Visszakapcsolom az internetet':'Offline mód kipróbálása'}
+function sync(){if(!isOff()&&qn){toast('Szinkronizálva: '+qn+' elem');qn=0}net()}
+$('#offb').onclick=()=>{off=!off;if(off)toast('Offline mód: a bejegyzések helyben maradnak');sync()};
+addEventListener('online',sync);addEventListener('offline',net);
+function listen(cb){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Ezen az eszközön nincs hangfelismerés');return}try{const r=new R();r.lang='hu-HU';r.onresult=e=>cb(e.results[0][0].transcript);r.onerror=()=>toast('A mikrofon nem érhető el');r.start();toast('Hallgatlak…')}catch(e){toast('A mikrofon nem érhető el')}}
+
+const shop=[];
+function drawShop(){const L=$('#slist');L.innerHTML='';const n=shop.filter(x=>!x.d).length;$('#scnt').textContent=n?n+' tétel van hátra':'Minden meglett';[...shop.filter(x=>!x.d),...shop.filter(x=>x.d)].forEach(x=>{const r=E('div','row glass'+(x.d?' done':'')),b=E('button','ck');b.setAttribute('aria-label','Megvan');b.onclick=e=>{x.d=!x.d;if(x.d)burst(e.clientX,e.clientY);drawShop()};r.append(b,E('span','t',x.t));L.append(r)})}
+function addShop(txt){txt.split(/,|\n|\s+és\s+/i).map(s=>s.trim()).filter(Boolean).forEach(s=>shop.unshift({t:s[0].toUpperCase()+s.slice(1),d:false}));drawShop()}
+$('#sa').onclick=()=>{addShop($('#si').value);$('#si').value=''};$('#si').onkeydown=e=>{if(e.key==='Enter')$('#sa').click()};
+$('#sm').onclick=()=>listen(addShop);
+$('#sc').onclick=()=>{for(let i=shop.length-1;i>=0;i--)if(shop[i].d)shop.splice(i,1);drawShop()};
+$('#sp').onclick=()=>$('#sf').click();
+$('#sf').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#spv');pv.innerHTML='';const im=new Image();im.alt='Lista';im.src=URL.createObjectURL(f);pv.append(im,E('i','scan'));pv.hidden=false;await sleep(2200);pv.hidden=true;addShop('Tej, tojás, vaj');toast('3 tétel hozzáadva (minta)')};
+
+const habits=[];
+function streak(h){let s=0,i=h.log.includes(0)?0:-1;while(h.log.includes(i)){s++;i--}return s}
+function drawHab(){const L=$('#hlist'),nm=['v','h','k','sze','cs','p','szo'];L.innerHTML='';habits.forEach(h=>{const c=E('div','card glass'),hd=E('div','hh'),dots=E('div','dots');hd.append(E('b','',h.n),E('span','chip',streak(h)+' napos sorozat'));for(let k=-6;k<=0;k++){const d=E('button','dot'+(h.log.includes(k)?' on':'')+(k===0?' tod':'')),w=E('div','dw');d.setAttribute('aria-label',k===0?'Ma':Math.abs(k)+' napja');if(k===0)d.onclick=e=>{const i=h.log.indexOf(0);if(i<0){h.log.push(0);burst(e.clientX,e.clientY)}else h.log.splice(i,1);drawHab()};w.append(d,E('small','',nm[(((now.getDay()+k)%7)+7)%7]));dots.append(w)}c.append(hd,dots);L.append(c)})}
+$('#ha').onclick=()=>{const v=$('#hi').value.trim();if(!v)return;habits.unshift({n:v,log:[]});$('#hi').value='';drawHab()};
+
+function fDraw(){const m=Math.floor(fLeft/60),s=fLeft%60;$('#ft').textContent=m+':'+String(s).padStart(2,'0');$('#fr').style.strokeDashoffset=552.9*(1-fLeft/fTot)}
+function fSel(){const s=$('#fs'),v=s.value;s.innerHTML='';s.append(new Option('Szabad fókusz',''));todos.filter(t=>!t.done).forEach(t=>s.append(new Option(t.t,t.t)));s.value=v}
+function fStop(){clearInterval(fT);fRun=false;$('#fgo').textContent=fLeft<fTot&&fLeft>0?'Folytatás':'Indítás'}
+$('#fgo').onclick=()=>{if(fRun){fStop();return}if(fLeft<=0)fLeft=fTot;fEnd=Date.now()+fLeft*1000;fRun=true;$('#fgo').textContent='Szünet';fT=setInterval(()=>{fLeft=Math.max(0,Math.round((fEnd-Date.now())/1000));fDraw();if(fLeft<=0){fStop();fDone++;$('#fc').textContent=fDone+' munkamenet ma';try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}toast(($('#fs').value?'Kész: '+$('#fs').value+'. ':'')+'Szép munka!');fLeft=fTot;fDraw();$('#fgo').textContent='Indítás'}},250)};
+$('#frs').onclick=()=>{fStop();fLeft=fTot;fDraw();$('#fgo').textContent='Indítás'};
+$$('#fp button').forEach(b=>b.onclick=()=>{if(fRun)return;fTot=fLeft=+b.dataset.min*60;$$('#fp button').forEach(x=>x.setAttribute('aria-pressed',x===b));fDraw();$('#fgo').textContent='Indítás'});
+
+const XS={cal:'Naptár (.ics)',todo:'Teendők',note:'Jegyzetek',all:'Teljes mentés'};
+function pad(n){return String(n).padStart(2,'0')}
+function xText(k){if(k==='cal'){const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Asszisztens//HU'],f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00',st0=new Date().toISOString().replace(/[-:]|\.\d{3}/g,'');Object.entries(evts).forEach(([off,l])=>l.forEach((e,i)=>{const [h,m]=e.t.split(':').map(Number),s=new Date(now.getFullYear(),now.getMonth(),now.getDate()+(+off),h,m),en=new Date(s.getTime()+36e5);L.push('BEGIN:VEVENT','UID:'+off+'-'+i+'-'+f(s)+'@asszisztens','DTSTAMP:'+st0,'DTSTART:'+f(s),'DTEND:'+f(en),'SUMMARY:'+e.n.replace(/[,;]/g,c=>'\\'+c),'END:VEVENT')}));L.push('END:VCALENDAR');return L.join('\r\n')}
+if(k==='todo')return todos.map(t=>(t.done?'[x] ':'[ ] ')+t.t+' ('+t.d+')').join('\n');
+if(k==='note')return notes.map(n=>n.t+'\n'+n.b+((n.tg||[]).length?'\n'+n.tg.map(t=>'#'+t).join(' '):'')).join('\n\n');
+return JSON.stringify({todos,notes,contacts,expenses,shop,habits,evts},null,1)}
+function xo(){$('#xo').value=xText(xKey);$$('#xk button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===xKey))}
+Object.entries(XS).forEach(([k,l])=>{const b=E('button','tg',l);b.dataset.k=k;b.onclick=()=>{xKey=k;xo()};$('#xk').append(b)});
+$('#xc').onclick=async()=>{const ta=$('#xo');try{await navigator.clipboard.writeText(ta.value);toast('Vágólapra másolva')}catch(e){ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}toast(ok?'Vágólapra másolva':'Jelöld ki és másold ki kézzel')}};
+$('#xs').onclick=async()=>{try{await navigator.share({title:XS[xKey],text:$('#xo').value})}catch(e){toast('A megosztás ezen az eszközön nem elérhető')}};
+$('#xd').onclick=()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('#xo').value],{type:'text/plain'}));a.download='asszisztens-'+xKey+'.'+(xKey==='cal'?'ics':xKey==='all'?'json':'txt');document.body.append(a);a.click();a.remove();toast('Letöltés indítva. Ha semmi nem történik, használd a Másolást.')}catch(e){toast('A letöltés itt nem működik, használd a Másolást')}};
+
+tl[2].onclick=()=>go(8);tl[3].onclick=()=>go(9);tl[4].onclick=()=>go(10);tl[5].onclick=()=>go(11);
+[8,9,10,11].forEach(n=>$('#b'+n).onclick=()=>go(4));
+drawShop();drawHab();fDraw();fSel();xo();net();
+function dayStr(o){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+o);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function offOf(s){const [y,m,d]=s.split('-').map(Number);return Math.round((new Date(y,m-1,d)-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5)}
+const tdy=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())},day0=tdy();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tdy()!==day0)location.reload()});
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const cfg={apiKey:"AIzaSyC5CeilzWU4xNxiuykm5kbI2PBsQzv403Q",authDomain:"asszisztens-4a331.firebaseapp.com",projectId:"asszisztens-4a331",storageBucket:"asszisztens-4a331.firebasestorage.app",messagingSenderId:"689700050302",appId:"1:689700050302:web:f85eff446fdb3d0a414f2f"};
+const app=initializeApp(cfg),auth=getAuth(app),db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+const Q=s=>document.querySelector(s);
+let ref=null,last='',ready=false,unsub=null;
+/*SYNC-START*/
+const rep=(k,v)=>k==='open'?undefined:v;
+function evAbs(){const o={};Object.entries(evts).forEach(([k,l])=>{if(l&&l.length)o[dayStr(+k)]=l});return o}
+const snap=()=>JSON.stringify({todos,notes,contacts,expenses,shop,habits:habits.map(h=>({n:h.n,log:h.log.map(dayStr)})),evts:evAbs(),th:document.documentElement.dataset.th},rep);
+const setArr=(a,v)=>{a.length=0;a.push(...(v||[]))};
+function redraw(){drawTodos();drawEvs();drawWeek();drawNotes();drawCt();drawEx();drawShop();drawHab();drawMa();drawWk();fSel();xo()}
+function apply(s){setArr(todos,s.todos);setArr(notes,s.notes);setArr(contacts,s.contacts);setArr(expenses,s.expenses);setArr(shop,s.shop);setArr(habits,(s.habits||[]).map(h=>({n:h.n,log:(h.log||[]).map(offOf)})));Object.keys(evts).forEach(k=>delete evts[k]);Object.entries(s.evts||{}).forEach(([d,l])=>{evts[offOf(d)]=l});if(s.th)setTh(s.th);redraw()}
+function onRemote(d){const cur=snap();if(d!==cur&&d!==last){apply(JSON.parse(d));last=snap()}else if(d===cur)last=cur}
+/*SYNC-END*/
+const stat=t=>{Q('#acc').textContent=t};
+const msg=c=>({'auth/invalid-credential':'Hibás e-mail vagy jelszó.','auth/email-already-in-use':'Ez az e-mail már regisztrálva van.','auth/weak-password':'A jelszó legalább 6 karakter legyen.','auth/invalid-email':'Hibás e-mail cím.','auth/unauthorized-domain':'Ez a webcím még nincs engedélyezve a Firebase-ben (Authentication, Settings, Authorized domains).','auth/operation-not-allowed':'Ez a belépési mód nincs bekapcsolva a Firebase-ben.','auth/popup-closed-by-user':'A belépési ablakot bezártad.'}[c]||'Nem sikerült: '+c);
+const err=m=>{Q('#gerr').textContent=m||''};
+Q('#gg').onclick=async()=>{err();try{await signInWithPopup(auth,new GoogleAuthProvider())}catch(e){err(msg(e.code))}};
+Q('#gl').onclick=async()=>{err();try{await signInWithEmailAndPassword(auth,Q('#ge').value.trim(),Q('#gp').value)}catch(e){err(msg(e.code))}};
+Q('#gr').onclick=async()=>{err();try{await createUserWithEmailAndPassword(auth,Q('#ge').value.trim(),Q('#gp').value)}catch(e){err(msg(e.code))}};
+Q('#lo').onclick=()=>signOut(auth);
+onAuthStateChanged(auth,u=>{
+  if(unsub){unsub();unsub=null}ready=false;ref=null;
+  if(!u){Q('#gate').hidden=false;stat('Nincs bejelentkezve');return}
+  Q('#gate').hidden=true;stat('Bejelentkezve: '+(u.email||'')+'. Szinkron indul…');
+  ref=doc(db,'users',u.uid);
+  unsub=onSnapshot(ref,{includeMetadataChanges:true},s=>{
+    const fc=s.metadata.fromCache;
+    if(s.exists()){if(!s.metadata.hasPendingWrites){onRemote(s.data().state);ready=true}}
+    else if(!fc)ready=true;
+    stat('Bejelentkezve: '+(u.email||'')+'. '+(fc?'Offline, helyi adatokkal dolgozol.':'Szinkronban.'));
+  },e=>stat('Szinkronhiba: '+e.code+' (ellenőrizd a Firestore szabályokat)'));
+});
+setInterval(async()=>{if(!ref||!ready)return;const cur=snap();if(cur===last)return;last=cur;try{await setDoc(ref,{state:cur,t:Date.now()})}catch(e){stat('Mentési hiba: '+e.code);last=''}},1500);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
