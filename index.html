@@ -182,7 +182,7 @@ select{font:inherit;color:inherit}select.in{width:100%;margin-top:14px}
     <div><h1 id="hi">Szép napot</h1><p class="date" id="date"></p></div>
     <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end"><button class="save glass" id="save" aria-pressed="false">Takarékos mód</button><span class="chip" id="net">Online</span></div>
   </div>
-  <p class="note">A hang- és fotófelismerés még minta, az AI a következő lépésben jön.</p>
+  
 
   <section class="view on" id="v0">
     <div class="card glass" style="margin-top:26px"><h2>Mai áttekintő</h2><div id="brief"></div><div class="stats" id="stats"></div></div>
@@ -201,7 +201,7 @@ select{font:inherit;color:inherit}select.in{width:100%;margin-top:14px}
     <p class="hint" id="hint">Koppints, és mondd el, mi jár a fejedben</p>
     <div id="wave" aria-hidden="true"></div></div>
     <div class="mode" id="m1"><textarea class="in" id="ti" placeholder="Írd ide, amit rögzíteni szeretnél. Például: holnap 9-kor megbeszélés, pénteken hívjam fel a szervizt." aria-label="Szöveg"></textarea><button class="btn" id="proc">Feldolgozás</button></div>
-    <div class="mode" id="m2"><button class="btn" id="pick" style="margin-top:22px">Fotó készítése vagy kiválasztása</button><input type="file" accept="image/*" id="file" hidden><div class="pv" id="pv" hidden></div><p class="note">Látványterv: a kiolvasott szöveg most minta, az igazi felismerés a Gemini bekötése után jön.</p></div>
+    <div class="mode" id="m2"><button class="btn" id="pick" style="margin-top:22px">Fotó készítése vagy kiválasztása</button><input type="file" accept="image/*" id="file" hidden><div class="pv" id="pv" hidden></div><p class="note">A fotóról a Gemini olvassa ki a szöveget és a teendőket.</p></div>
     <div id="res" hidden>
       <div class="card glass"><h2 id="trh">Átirat</h2><div id="tr"></div></div>
       <div class="card glass reveal" id="sum"><h2>Összefoglaló</h2><div id="sumt"></div></div>
@@ -368,25 +368,32 @@ $('#askb').onclick=ask;$('#ask').onkeydown=e=>{if(e.key==='Enter')ask()};
 drawTodos();drawWeek();drawEvs();drawNotes();
 
 /* ---- 1. kör ---- */
-let last=0,pend=[];
+let last=0,pend=[],PLAN=null;
 function go(i){if(i!==5)last=i;$$('.view').forEach(v=>v.classList.toggle('on',v.id==='v'+i));const ti=i>5?4:i;tabs.forEach((t,j)=>t.setAttribute('aria-selected',ti===j));const p=$('#pill');p.style.opacity=i===5?0:1;p.style.transform=`translateX(${Math.min(ti,4)*100}%)`;$('#fab').classList.toggle('off',i===5);if(i===0){drawMa();drawWk()}if(i===10)fSel();if(i===11)xo();scrollTo(0,0)}
 const SAMPLE='Holnap reggel nyolckor megbeszélés a raktárvezetővel a leltár ütemezéséről. Kedden rendeljem meg a kézi szkennerek tartalék akkumulátorait. Pénteken hívjam fel a szervizt a targonca éves vizsgája miatt.';
 const PHOTO='Havi leltárlista leadása: péntek. Targonca szerviz időpont: kedden 14:00-kor. Munkaruha-rendelés véglegesítése jövő héten.';
 const DAYS=/holnap|\bma\b|hétfő|kedd|szerd|csütörtök|péntek|szombat|vasárnap/i;
 function extract(t){pend=t.split(/(?<=[.!?])\s+|\n+/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4).map(s=>({t:s.replace(/[.!?]+$/,''),d:(s.match(DAYS)||['ma'])[0].toLowerCase()}))}
-async function show(label,text){const res=$('#res');res.hidden=false;$$('.reveal').forEach(r=>r.classList.remove('show'));$('#trh').textContent=label;extract(text);await typeWords($('#tr'),text,label==='Átirat'?70:28);$('#sumt').textContent='A szövegből '+pend.length+' tennivaló került elő.';$('#sum').classList.add('show');const xr=$('#xr');xr.innerHTML='';pend.forEach(p=>{const r=document.createElement('div');r.className='x';r.innerHTML='<span></span><span class="chip"></span>';r.firstChild.textContent=p.t;r.lastChild.textContent=p.d;xr.append(r)});await sleep(450);$('#ext').style.setProperty('--d','.1s');$('#ext').classList.add('show');res.scrollIntoView({behavior:'smooth',block:'nearest'})}
-$('#mic').onclick=async()=>{if(busy)return;if(!rec){rec=true;document.body.classList.add('air');$('#res').hidden=true;$('#hint').textContent='Hallgatlak. Koppints a leállításhoz';t0=performance.now();raf=requestAnimationFrame(frame);return}rec=false;busy=true;cancelAnimationFrame(raf);document.body.classList.remove('air');bars.forEach(b=>b.style.transform='scaleY(.06)');$('#hint').textContent='Átírom a felvételt…';await show('Átirat',SAMPLE);$('#hint').textContent='Kész. Koppints egy új felvételhez';busy=false};
-$('#keep').onclick=()=>{const H={nyolckor:8,kilenckor:9,tízkor:10,tizenegykor:11,délben:12};pend.forEach(p=>{todos.unshift({t:p.t,d:p.d});const m=p.t.match(/(\d{1,2})(?::(\d{2}))?\s*(?:-kor|órakor)/i),w=p.t.toLowerCase().match(/nyolckor|kilenckor|tízkor|tizenegykor|délben/),hr=m?+m[1]:w?H[w[0]]:null;if(hr!==null){const off=p.d==='holnap'?1:p.d==='ma'?0:null;if(off!==null)(evts[off]=evts[off]||[]).push({t:String(hr).padStart(2,'0')+':'+((m&&m[2])||'00'),n:p.t,c:'#d946ef'})}});drawTodos();drawEvs();toast('Elmentve: '+pend.length+' elem')};
+async function show(label,text){const res=$('#res');res.hidden=false;$$('.reveal').forEach(r=>r.classList.remove('show'));$('#trh').textContent=label;if(PLAN){pend=PLAN;PLAN=null}else extract(text);await typeWords($('#tr'),text,label==='Átirat'?70:28);$('#sumt').textContent='A szövegből '+pend.length+' tennivaló került elő.';$('#sum').classList.add('show');const xr=$('#xr');xr.innerHTML='';pend.forEach(p=>{const r=document.createElement('div');r.className='x';r.innerHTML='<span></span><span class="chip"></span>';r.firstChild.textContent=p.t;r.lastChild.textContent=p.d;xr.append(r)});await sleep(450);$('#ext').style.setProperty('--d','.1s');$('#ext').classList.add('show');res.scrollIntoView({behavior:'smooth',block:'nearest'})}
+let SR=null,tx='';
+$('#mic').onclick=async()=>{if(busy)return;const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!rec){rec=true;document.body.classList.add('air');$('#res').hidden=true;$('#hint').textContent='Hallgatlak. Koppints a leállításhoz';t0=performance.now();raf=requestAnimationFrame(frame);tx='';
+if(R){try{const s=SR=new R();s.lang='hu-HU';s.continuous=true;s.interimResults=false;s.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)tx+=e.results[i][0].transcript+'. '};s.onerror=()=>{};s.onend=()=>{if(rec)try{s.start()}catch(_){}};s.start()}catch(e){SR=null}}return}
+rec=false;busy=true;cancelAnimationFrame(raf);document.body.classList.remove('air');bars.forEach(b=>b.style.transform='scaleY(.06)');
+if(SR){const s=SR;SR=null;try{s.stop()}catch(_){}}await sleep(700);const text=tx.trim();
+if(!text){$('#hint').textContent='Nem hallottam semmit. Koppints és próbáld újra';toast(R?'Nem hallottam semmit':'Ezen az eszközön nincs hangfelismerés');busy=false;return}
+$('#hint').textContent='Feldolgozom…';await planShow('Átirat',text);$('#hint').textContent='Kész. Koppints egy új felvételhez';busy=false};
+$('#keep').onclick=()=>{pend.forEach(p=>{todos.unshift({t:p.t,d:p.d});if(p.time&&p.off!=null&&p.off>=-7&&p.off<=90)(evts[p.off]=evts[p.off]||[]).push({t:p.time,n:p.t,c:'#d946ef'})});drawTodos();drawEvs();toast('Elmentve: '+pend.length+' elem')};
 $('#fab').onclick=()=>go(5);
 $('#x').onclick=()=>{rec=false;cancelAnimationFrame(raf);document.body.classList.remove('air');go(last)};
 $$('.seg [data-m]').forEach(b=>b.onclick=()=>{const m=+b.dataset.m;$$('.mode').forEach((x,i)=>x.classList.toggle('on',i===m));$$('.seg [data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#res').hidden=true});
-$('#proc').onclick=()=>{const v=$('#ti').value.trim();if(!v){toast('Írj be valamit');return}show('Szöveg',v)};
+$('#proc').onclick=()=>{const v=$('#ti').value.trim();if(!v){toast('Írj be valamit');return}planShow('Szöveg',v)};
 $('#pick').onclick=()=>$('#file').click();
-$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#pv');pv.innerHTML='';const im=new Image();im.alt='Feltöltött fotó';im.src=URL.createObjectURL(f);const sc=document.createElement('i');sc.className='scan';pv.append(im,sc);pv.hidden=false;$('#res').hidden=true;await sleep(2200);sc.remove();await show('Kiolvasott szöveg',PHOTO)};
+$('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#pv');pv.innerHTML='';const im=new Image();im.alt='Feltöltött fotó';im.src=URL.createObjectURL(f);const sc=document.createElement('i');sc.className='scan';pv.append(im,sc);pv.hidden=false;$('#res').hidden=true;try{const pl=await aiPlan('',f);sc.remove();PLAN=toPend(pl.items);await show('Kiolvasott szöveg',pl.text||'Nem találtam olvasható szöveget a képen.')}catch(e){console.error(e);sc.remove();toast('A fotó feldolgozása nem sikerült')}};
 function drawMa(){const open=todos.filter(o=>!o.done),tod=evts[0]||[],nx=tod[0];$('#stats').innerHTML='<div class="st"><b>'+open.length+'</b>nyitott teendő</div><div class="st"><b>'+tod.length+'</b>mai esemény</div><div class="st"><b>'+(todos.length-open.length)+'</b>kész</div>';$('#brief').textContent=(open.length?'Ma '+open.length+' nyitott teendőd van, az első: '+open[0].t+'.':'Minden teendőd kész, szabad a nap.')+' '+(nx?'Következő esemény: '+nx.n+', '+nx.t+'.':'Mára nincs esemény a naptárban.')}
 function drawWk(){const n=['h','k','sze','cs','p','szo','v'],full=['hétfő','kedd','szerda','csütörtök','péntek','szombat','vasárnap'],m0=-((now.getDay()+6)%7),v=[];for(let i=0;i<7;i++){const ds=dayStr(m0+i);v.push(todos.filter(t=>t.at===ds).length)}const mx=Math.max(1,...v),sum=v.reduce((a,b)=>a+b,0);$('#wk').innerHTML=v.map((x,i)=>'<i style="--h:'+Math.max(6,x/mx*100)+'%;--i:'+i+'"></i>').join('');$('#wl').innerHTML=n.map(x=>'<span>'+x+'</span>').join('');$('#wks').textContent=sum?'Ezen a héten '+sum+' teendőt zártál le, a legerősebb napod: '+full[v.indexOf(Math.max(...v))]+'.':'Ezen a héten még nem zártál le teendőt.'}
 function answer(q){q=q.toLowerCase();if(/holnap/.test(q)){const l=evts[1]||[];return l.length?'Holnap: '+l.map(e=>e.t+' '+e.n).join('; ')+'.':'Holnapra nincs esemény.'}if(/\bma\b|mai|teend/.test(q)){const o=todos.filter(t=>!t.done);return o.length?'Nyitott teendők: '+o.map(t=>t.t).join('; ')+'.':'Minden teendőd kész.'}const w=q.split(/\s+/).filter(x=>x.length>3).map(x=>x.slice(0,-1)),hit=notes.find(n=>w.some(x=>(n.t+n.b).toLowerCase().includes(x)));return hit?'A jegyzeteid szerint: '+hit.b:'Erre nem találtam adatot.'}
-$('#vqb').onclick=()=>{const q=$('#vq').value.trim();if(q)typeWords($('#vans'),answer(q),45)};$('#vq').onkeydown=e=>{if(e.key==='Enter')$('#vqb').click()};
+$('#vqb').onclick=()=>{const q=$('#vq').value.trim();if(q){$('#vans').textContent='Gondolkodom…';aiAnswer(q).then(x=>typeWords($('#vans'),x,25))}};$('#vq').onkeydown=e=>{if(e.key==='Enter')$('#vqb').click()};
 $('#vqm').onclick=()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Ezen az eszközön nincs hangfelismerés');return}try{const r=new R();r.lang='hu-HU';r.onresult=e=>{$('#vq').value=e.results[0][0].transcript;$('#vqb').click()};r.onerror=()=>toast('A mikrofon nem érhető el');r.start();toast('Hallgatlak…')}catch(e){toast('A mikrofon nem érhető el')}};
 const TL=[['Kapcsolatok','névjegyek, ki mit kért','2'],['Kiadások','számlák, összegek','2'],['Vásárlólista','hangból és fotóról','3'],['Szokások','napi sorozatok','3'],['Fókusz','időzítő','3'],['Export','naptár, megosztás','3']];
 TL.forEach(([a,b,k])=>{const t=document.createElement('button');t.className='tile glass';t.innerHTML='<b></b><small></small>';$('b',t).textContent=a;$('small',t).textContent=b;t.onclick=()=>toast(a+': a '+k+'. körben készül');$('#tiles').append(t)});
@@ -497,14 +504,32 @@ function dayStr(o){const d=new Date(now.getFullYear(),now.getMonth(),now.getDate
 function offOf(s){const [y,m,d]=s.split('-').map(Number);return Math.round((new Date(y,m-1,d)-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5)}
 const tdy=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())},day0=tdy();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tdy()!==day0)location.reload()});
+
+/* ---- Gemini ---- */
+const toPend=a=>(a||[]).slice(0,8).map(i=>{const t=String(i&&i.t||'').trim();if(!t)return null;let d='ma',off=null;const dt=String(i.date||'');if(/^\d{4}-\d{2}-\d{2}$/.test(dt)){off=offOf(dt);const[y,m,dd]=dt.split('-').map(Number);d=off===0?'ma':off===1?'holnap':new Date(y,m-1,dd).toLocaleDateString('hu-HU',{weekday:'long'})}return{t,d,off,time:/^\d{1,2}:\d{2}$/.test(String(i.time||''))?String(i.time).padStart(5,'0'):null}}).filter(Boolean);
+async function aiPlan(text,file){if(!window.AI)throw new Error('AI nem tölt be');
+const p='Te egy magyar nyelvű személyi asszisztens vagy. Mai dátum: '+dayStr(0)+' ('+now.toLocaleDateString('hu-HU',{weekday:'long'})+'). A bemenet '+(file?'egy fotó (számla, jegyzet, cetli, kézírás is lehet).':'egy magyar szöveg.')+' Feladat: 1) "text": '+(file?'a képen olvasható szöveg pontos átirata':'a bemeneti szöveg, helyesírással javítva')+'; 2) "items": a konkrét teendők és események listája, legfeljebb 8. Minden elem: "t" rövid magyar teendő szöveg, "date" YYYY-MM-DD ha a nap egyértelmű (a holnap, kedden, jövő hét stb. a mai dátumhoz képest), különben null, "time" HH:MM ha van időpont, különben null. Csak JSON-t adj: {"text":"...","items":[{"t":"","date":null,"time":null}]}.'+(text?' Szöveg: '+text:'');
+return AI.json(p,file)}
+async function planShow(label,text){toast('Feldolgozom…');let pl=null;try{pl=await aiPlan(text)}catch(e){console.error(e);toast('Az AI most nem elérhető, egyszerű feldolgozás')}
+if(pl&&pl.items)PLAN=toPend(pl.items);await show(label,text)}
+async function aiAnswer(q){if(!window.AI)return answer(q);
+const c={ma:dayStr(0),nap:now.toLocaleDateString('hu-HU',{weekday:'long'}),teendok:todos.map(o=>({szoveg:o.t,kesz:!!o.done,mikor:o.d})),esemenyek:Object.entries(evts).flatMap(([k,l])=>(l||[]).map(e=>({datum:dayStr(+k),ido:e.t,nev:e.n}))),jegyzetek:notes.map(n=>({cim:n.t,szoveg:n.b})),kiadasok:expenses,vasarlolista:shop.filter(x=>!x.d).map(x=>x.t),nevjegyek:contacts};
+try{return(await AI.text('Személyi asszisztens vagy. Magyarul, röviden és természetesen válaszolj, kizárólag az alábbi adatok alapján. Ha az adatokban nincs meg a válasz, mondd meg őszintén. Adatok (JSON): '+JSON.stringify(c).slice(0,24000)+'\nKérdés: '+q)).trim()}catch(e){console.error(e);return answer(q)}}
+async function ask(){const q=$('#ask').value.trim();if(!q)return;$('#ans').textContent='Gondolkodom…';await typeWords($('#ans'),await aiAnswer(q),25)}
 </script>
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,onSnapshot,setDoc} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyC5CeilzWU4xNxiuykm5kbI2PBsQzv403Q",authDomain:"asszisztens-4a331.firebaseapp.com",projectId:"asszisztens-4a331",storageBucket:"asszisztens-4a331.firebasestorage.app",messagingSenderId:"689700050302",appId:"1:689700050302:web:f85eff446fdb3d0a414f2f"};
+import {getAI,getGenerativeModel,GoogleAIBackend} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-ai.js";
 const app=initializeApp(cfg),auth=getAuth(app),db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
 const Q=s=>document.querySelector(s);
+const ai=getAI(app,{backend:new GoogleAIBackend()}),MODEL='gemini-2.5-flash';
+const gt=getGenerativeModel(ai,{model:MODEL}),gj=getGenerativeModel(ai,{model:MODEL,generationConfig:{responseMimeType:'application/json'}});
+const shrink=f=>new Promise((ok,no)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',.85).split(',')[1])};im.onerror=no;im.src=u});
+window.AI={async text(p){return (await gt.generateContent(p)).response.text()},
+async json(p,f){const parts=[p];if(f)parts.push({inlineData:{data:await shrink(f),mimeType:'image/jpeg'}});const r=(await gj.generateContent(parts)).response.text();return JSON.parse(r.replace(/^```json|```$/g,'').trim())}};
 let ref=null,last='',ready=false,unsub=null;
 /*SYNC-START*/
 const rep=(k,v)=>k==='open'?undefined:v;
