@@ -171,6 +171,7 @@ select{font:inherit;color:inherit}select.in{width:100%;margin-top:14px}
 .saver .aurora i{animation:none}
 .saver .glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--sv)}
 @media (prefers-reduced-motion:reduce){.aurora i,.air .rec .ring,.typing::after{animation:none}.view.on,.ev{animation:none}.reveal{transition:none}}
+.rec-big{width:100%;height:140px;border-radius:34px;font-size:28px;font-weight:700;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;margin-top:26px}.more{margin-top:18px}.more>summary{padding:14px 4px;cursor:pointer;opacity:.7}
 </style>
 </head>
 <body>
@@ -185,9 +186,13 @@ select{font:inherit;color:inherit}select.in{width:100%;margin-top:14px}
   
 
   <section class="view on" id="v0">
+    <button class="btn rec-big" id="bigrec" aria-label="Felvétel indítása"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:44px;height:44px"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Felvétel</span></button>
+    <div class="card glass"><h2>Mára</h2><div id="today"></div></div>
+    <details class="more"><summary>Továbbiak: áttekintő, kérdés, heti összegzés</summary>
     <div class="card glass" style="margin-top:26px"><h2>Mai áttekintő</h2><div id="brief"></div><div class="stats" id="stats"></div></div>
     <div class="card glass"><h2>Kérdezz a napodról</h2><div class="add" style="margin-top:6px"><input class="in" id="vq" placeholder="Például: mi van holnap?" aria-label="Kérdés"><button class="btn mic-s" id="vqm" aria-label="Kérdezés hangból"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="btn" id="vqb">Kérdezés</button></div><div class="ans" id="vans"></div></div>
     <div class="card glass"><h2>Heti összegzés</h2><div class="wk" id="wk"></div><div class="wl" id="wl"></div><p class="dimp" id="wks"></p></div>
+  </details>
   </section>
   <section class="view" id="v5">
     <div class="seg"><button data-m="0" aria-pressed="true">Hang</button><button data-m="1" aria-pressed="false">Írás</button><button data-m="2" aria-pressed="false">Fotó</button><button class="close" id="x">Bezár</button></div>
@@ -390,7 +395,7 @@ $$('.seg [data-m]').forEach(b=>b.onclick=()=>{const m=+b.dataset.m;$$('.mode').f
 $('#proc').onclick=()=>{const v=$('#ti').value.trim();if(!v){toast('Írj be valamit');return}planShow('Szöveg',v)};
 $('#pick').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const pv=$('#pv');pv.innerHTML='';const im=new Image();im.alt='Feltöltött fotó';im.src=URL.createObjectURL(f);const sc=document.createElement('i');sc.className='scan';pv.append(im,sc);pv.hidden=false;$('#res').hidden=true;try{const pl=await aiPlan('',f);sc.remove();PLAN=toPend(pl.items);await show('Kiolvasott szöveg',pl.text||'Nem találtam olvasható szöveget a képen.')}catch(e){console.error(e);sc.remove();toast('A fotó feldolgozása nem sikerült')}};
-function drawMa(){const open=todos.filter(o=>!o.done),tod=evts[0]||[],nx=tod[0];$('#stats').innerHTML='<div class="st"><b>'+open.length+'</b>nyitott teendő</div><div class="st"><b>'+tod.length+'</b>mai esemény</div><div class="st"><b>'+(todos.length-open.length)+'</b>kész</div>';$('#brief').textContent=(open.length?'Ma '+open.length+' nyitott teendőd van, az első: '+open[0].t+'.':'Minden teendőd kész, szabad a nap.')+' '+(nx?'Következő esemény: '+nx.n+', '+nx.t+'.':'Mára nincs esemény a naptárban.')}
+function drawMa(){drawToday();const open=todos.filter(o=>!o.done),tod=evts[0]||[],nx=tod[0];$('#stats').innerHTML='<div class="st"><b>'+open.length+'</b>nyitott teendő</div><div class="st"><b>'+tod.length+'</b>mai esemény</div><div class="st"><b>'+(todos.length-open.length)+'</b>kész</div>';$('#brief').textContent=(open.length?'Ma '+open.length+' nyitott teendőd van, az első: '+open[0].t+'.':'Minden teendőd kész, szabad a nap.')+' '+(nx?'Következő esemény: '+nx.n+', '+nx.t+'.':'Mára nincs esemény a naptárban.')}
 function drawWk(){const n=['h','k','sze','cs','p','szo','v'],full=['hétfő','kedd','szerda','csütörtök','péntek','szombat','vasárnap'],m0=-((now.getDay()+6)%7),v=[];for(let i=0;i<7;i++){const ds=dayStr(m0+i);v.push(todos.filter(t=>t.at===ds).length)}const mx=Math.max(1,...v),sum=v.reduce((a,b)=>a+b,0);$('#wk').innerHTML=v.map((x,i)=>'<i style="--h:'+Math.max(6,x/mx*100)+'%;--i:'+i+'"></i>').join('');$('#wl').innerHTML=n.map(x=>'<span>'+x+'</span>').join('');$('#wks').textContent=sum?'Ezen a héten '+sum+' teendőt zártál le, a legerősebb napod: '+full[v.indexOf(Math.max(...v))]+'.':'Ezen a héten még nem zártál le teendőt.'}
 function answer(q){q=q.toLowerCase();if(/holnap/.test(q)){const l=evts[1]||[];return l.length?'Holnap: '+l.map(e=>e.t+' '+e.n).join('; ')+'.':'Holnapra nincs esemény.'}if(/\bma\b|mai|teend/.test(q)){const o=todos.filter(t=>!t.done);return o.length?'Nyitott teendők: '+o.map(t=>t.t).join('; ')+'.':'Minden teendőd kész.'}const w=q.split(/\s+/).filter(x=>x.length>3).map(x=>x.slice(0,-1)),hit=notes.find(n=>w.some(x=>(n.t+n.b).toLowerCase().includes(x)));return hit?'A jegyzeteid szerint: '+hit.b:'Erre nem találtam adatot.'}
 $('#vqb').onclick=()=>{const q=$('#vq').value.trim();if(q){$('#vans').textContent='Gondolkodom…';aiAnswer(q).then(x=>typeWords($('#vans'),x,25))}};$('#vq').onkeydown=e=>{if(e.key==='Enter')$('#vqb').click()};
@@ -505,6 +510,12 @@ function offOf(s){const [y,m,d]=s.split('-').map(Number);return Math.round((new 
 const tdy=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())},day0=tdy();
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tdy()!==day0)location.reload()});
 
+function drawToday(){const L=$('#today');if(!L)return;L.innerHTML='';
+const ev=(evts[0]||[]).slice().sort((a,b)=>a.t.localeCompare(b.t)),td=[...todos.filter(o=>o.d==='ma'&&!o.done),...todos.filter(o=>o.d==='ma'&&o.done)];
+if(!ev.length&&!td.length){L.innerHTML='<p class="empty">Mára nincs teendő vagy esemény. Koppints a Felvételre, és mondd el.</p>';return}
+ev.forEach(e=>{const r=document.createElement('div');r.className='row glass';r.innerHTML='<span class="chip"></span><span class="t"></span>';r.firstChild.textContent=e.t;r.lastChild.textContent=e.n;L.append(r)});
+td.forEach(o=>{const r=document.createElement('div');r.className='row glass'+(o.done?' done':'');r.innerHTML='<button class="ck" aria-label="Kész"></button><span class="t"></span>';$('.t',r).textContent=o.t;$('.ck',r).onclick=()=>{o.done=!o.done;o.at=o.done?dayStr(0):null;drawTodos();drawMa()};L.append(r)})}
+$('#bigrec').onclick=()=>{go(5);const s=$$('.seg [data-m]')[0];if(s)s.click();$('#mic').click()};
 /* ---- Gemini ---- */
 const toPend=a=>(a||[]).slice(0,10).map(i=>{const t=String(i&&i.t||'').trim();if(!t)return null;let d='ma',off=null;const dt=String(i.date||'');if(/^\d{4}-\d{2}-\d{2}$/.test(dt)){off=offOf(dt);const[y,m,dd]=dt.split('-').map(Number);d=off===0?'ma':off===1?'holnap':new Date(y,m-1,dd).toLocaleDateString('hu-HU',{weekday:'long'})}return{t,d,off,ev:i.type==='event',time:/^\d{1,2}:\d{2}$/.test(String(i.time||''))?String(i.time).padStart(5,'0'):null}}).filter(Boolean);
 function applyPend(){pend.forEach(p=>{if(p.ev){const o=p.off==null?0:p.off;(evts[o]=evts[o]||[]).push({t:p.time||'00:00',n:p.t,c:'#d946ef'})}else{todos.unshift({t:p.t,d:p.d});if(p.time&&p.off!=null)(evts[p.off]=evts[p.off]||[]).push({t:p.time,n:p.t,c:'#d946ef'})}});drawTodos();drawEvs();return pend.length}
